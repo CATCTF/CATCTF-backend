@@ -15,7 +15,7 @@ import { AccessStrategy } from './strategies/access.strategies';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secretOrPrivateKey: config.get('JWT_SECRET'),
-        signOptions: { expiresIn: config.get('JWT_EXPIRES_IN') },
+        signOptions: { expiresIn: config.get('JWT_EXPIRES_IN') ?? '1d' },
       }),
     }),
     TypeOrmModule.forFeature([User]),

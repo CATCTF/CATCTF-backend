@@ -47,7 +47,7 @@ export class AuthService {
       { id },
       {
         secret: this.configService.get('JWT_SECRET'),
-        expiresIn: this.configService.get('JWT_EXPIRES_IN'),
+        expiresIn: this.configService.get('JWT_EXPIRES_IN') ?? '1d',
       },
     );
 
@@ -65,7 +65,7 @@ export class AuthService {
       { id },
       {
         secret: this.configService.get('JWT_SECRET'),
-        expiresIn: this.configService.get('JWT_EXPIRES_IN'),
+        expiresIn: this.configService.get('JWT_EXPIRES_IN') ?? '1d',
       },
     );
 
