@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
+import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,6 +28,10 @@ async function bootstrap() {
     preflightContinue: config.get<boolean>('CORS_PREFLIGHT', false),
     optionsSuccessStatus: config.get<number>('CORS_OPTIONS_STATUS', 204),
   });
-  await app.listen(3000);
+
+  if (config.get<string>('ADMIN_ID') && config.get<string>('ADMIN_PW')) {
+    await app.listen(3000);
+    Logger.log('Server is running on port 3000');
+  } else Logger.error('Environment is not set. (ADMIN_ID or ADMIN_PW)');
 }
 bootstrap();

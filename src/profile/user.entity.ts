@@ -1,4 +1,13 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+
+import { Solve } from 'src/challenge/solve.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  PrimaryColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity()
 export class User {
@@ -19,4 +28,14 @@ export class User {
 
   @Column('boolean', { default: false })
   isAdmin!: boolean;
+
+  @Column('integer', { default: 0 })
+  point!: number;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
+
+  @OneToMany(() => Solve, (solve) => solve.user)
+  @JoinColumn()
+  solves: Solve[];
 }

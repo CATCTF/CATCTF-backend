@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from './profile/user.entity';
+import { Challenge } from './challenge/challenge.entity';
+import { Solve } from './challenge/solve.entity';
 
 @Module({
   imports: [
@@ -15,7 +17,7 @@ import { User } from './profile/user.entity';
         username: config.get<string>('DB_USERNAME'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_DATABASE'),
-        entities: [User],
+        entities: [User, Challenge, Solve],
         synchronize: true,
         charset: 'utf8_general_ci',
       }),

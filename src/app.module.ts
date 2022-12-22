@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { DataBaseModule } from './database.module';
 import { ProfileModule } from './profile/profile.module';
+import { ChallengeModule } from './challenge/challenge.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ProfileModule } from './profile/profile.module';
     AuthModule,
     ProfileModule,
     DataBaseModule,
+    ChallengeModule,
   ],
   controllers: [],
   providers: [],
