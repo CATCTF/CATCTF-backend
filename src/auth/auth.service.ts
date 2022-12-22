@@ -9,7 +9,7 @@ import * as crypto from 'crypto';
 import { AuthResDto } from './dto/AuthResDto';
 import { LoginDto } from './dto/LoginDto';
 
-function sha256(text: string) {
+export function sha256(text: string) {
   return crypto.createHash('sha256').update(text).digest('hex');
 }
 
@@ -27,24 +27,20 @@ export class AuthService {
   }
 
   async register(body: RegisterDto): Promise<AuthResDto> {
-    const { id, name, email, password, school } = body;
     const user = await this.userRepository.findOne({
-      where: { id },
+      where: { id: body.id },
     });
 
     if (user) throw new HttpException('Already exists', HttpStatus.BAD_REQUEST);
 
     const newUser = await this.userRepository.create({
-      id,
-      name,
-      email,
-      password: sha256(password),
-      school,
+      ...body,
+      password: sha256(body.password),
     });
     await this.userRepository.save(newUser);
 
     const accessToken = await this.jwtService.signAsync(
-      { id },
+      { id: newUser.id },
       {
         secret: this.configService.get('JWT_SECRET'),
         expiresIn: this.configService.get('JWT_EXPIRES_IN') ?? '1d',
@@ -56,10 +52,12 @@ export class AuthService {
 
   async login(body: LoginDto): Promise<AuthResDto> {
     const { id, password } = body;
-    const user = await this.userRepository.findOneBy({ id, password });
+    const user = await this.userRepository.findOneBy({
+      id,
+      password: sha256(password),
+    });
 
-    if (!user)
-      throw new HttpException('User Not Found', HttpStatus.UNAUTHORIZED);
+    if (!user) throw new HttpException('Forbbiden', HttpStatus.UNAUTHORIZED);
 
     const accessToken = await this.jwtService.signAsync(
       { id },

@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { AccessGuard } from 'src/auth/guard/access.guard';
 import { RegisterDto } from './dto/RegisterDto';
 import { LoginDto } from './dto/LoginDto';
+import { AuthResDto } from './dto/AuthResDto';
 
 @Controller('/auth')
 export class AuthController {
@@ -12,19 +13,19 @@ export class AuthController {
   @Get('/')
   @ApiBearerAuth()
   @UseGuards(AccessGuard)
-  async getHello() {
+  async getHello(): Promise<string> {
     return await this.authService.getHello();
   }
 
   @Post('/register')
   @ApiBody({ type: RegisterDto })
-  async register(@Body() body: RegisterDto) {
+  async register(@Body() body: RegisterDto): Promise<AuthResDto> {
     return await this.authService.register(body);
   }
 
   @Post('/login')
   @ApiBody({ type: LoginDto })
-  async login(@Body() body: LoginDto) {
+  async login(@Body() body: LoginDto): Promise<AuthResDto> {
     return await this.authService.login(body);
   }
 }
