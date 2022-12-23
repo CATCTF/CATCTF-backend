@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
 import { Logger } from '@nestjs/common';
+import { sha256 } from './auth/auth.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -30,6 +31,21 @@ async function bootstrap() {
   });
 
   if (config.get<string>('ADMIN_ID') && config.get<string>('ADMIN_PW')) {
+    const userRepository = app.get('UserRepository');
+    const adminUser = await userRepository.findOneBy({
+      id: config.get<string>('ADMIN_ID'),
+    });
+    if (!adminUser) {
+      await userRepository.save({
+        id: config.get<string>('ADMIN_ID'),
+        password: sha256(config.get<string>('ADMIN_PW')),
+        name: config.get<string>('ADMIN_NAME', 'Admin'),
+        email: config.get<string>('ADMIN_EMAIL', 'admin@catctf.com'),
+        school: config.get<string>('ADMIN_SCHOOL', 'CATCTF'),
+        rank: 0,
+        isAdmin: true,
+      });
+    }
     await app.listen(3000);
     Logger.log('Server is running on port 3000');
   } else Logger.error('Environment is not set. (ADMIN_ID or ADMIN_PW)');
