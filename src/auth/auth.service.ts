@@ -33,9 +33,14 @@ export class AuthService {
 
     if (user) throw new HttpException('Already exists', HttpStatus.BAD_REQUEST);
 
+    const users = await this.userRepository.find({
+      select: ['id'],
+    });
+
     const newUser = await this.userRepository.create({
       ...body,
       password: sha256(body.password),
+      rank: users.length + 1,
     });
     await this.userRepository.save(newUser);
 

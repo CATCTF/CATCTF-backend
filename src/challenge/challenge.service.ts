@@ -108,12 +108,12 @@ export class ChallengeService {
     if (!challenge)
       throw new HttpException('Challenge not found', HttpStatus.BAD_REQUEST);
 
-    // if (!challenge.show) {
-    //   throw new HttpException(
-    //     'This challenge is not available',
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
+    if (!challenge.show) {
+      throw new HttpException(
+        'This challenge is not available',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     const isSolved = await this.solveRepository.findBy({
       challenge: { id: body.id },
@@ -167,7 +167,26 @@ export class ChallengeService {
           solve.user.point += challenge.point;
         });
       }
+      // rank
+      const users = await this.userRepository.find({
+        select: ['id', 'point', 'rank'],
+        relations: ['solves'],
+      });
 
+      users.sort((a, b) => {
+        if (a.point === b.point)
+          return (
+            new Date(a.solves[0].createdAt).getTime() -
+            new Date(b.solves[0].createdAt).getTime()
+          );
+        else return b.point - a.point;
+      });
+
+      users.forEach((user, index) => {
+        user.rank = index + 1;
+      });
+
+      await this.userRepository.save(users);
       await this.solveRepository.save(isSolved);
       await this.challengeRepository.save(challenge);
     }

@@ -32,6 +32,9 @@ export class User {
   @Column('integer', { default: 0 })
   point!: number;
 
+  @Column('number')
+  rank!: number;
+
   @UpdateDateColumn()
   updatedAt!: Date;
 
