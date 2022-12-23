@@ -5,11 +5,7 @@ import { sha256 } from 'src/auth/auth.service';
 import { User } from 'src/profile/user.entity';
 import { Repository } from 'typeorm';
 import { Challenge } from './challenge.entity';
-import {
-  CHallengeOneResDto,
-  ChallengeResDto,
-  ChallengesResDto,
-} from './dto/ChallengeResDto';
+import { ChallengeResDto, ChallengesResDto } from './dto/ChallengeResDto';
 import { DeleteDto } from './dto/DeleteDto';
 import { SolveDto, SolveResDto } from './dto/SolveDto';
 import { UpdateDto } from './dto/UpdateDto';
@@ -39,24 +35,20 @@ export class ChallengeService {
     };
   }
 
-  async getOne(id: string): Promise<CHallengeOneResDto> {
+  async getOne(id: string): Promise<Challenge> {
     if (!id) throw new HttpException('ID not found', HttpStatus.BAD_REQUEST);
-    const challenge = await this.challengeRepository.findOne({
-      where: { id },
-      select: ['id', 'name', 'point'],
-      relations: ['solves.user'],
-    });
+    const challenge = await this.challengeRepository
+      .createQueryBuilder('challenge')
+      .where('challenge.id = :id', { id })
+      .select(['challenge.id', 'challenge.name'])
+      .leftJoin('challenge.solves', 'solve', 'solve.challengeId = challenge.id')
+      .addSelect('solve.createdAt')
+      .leftJoin('solve.user', 'user')
+      .addSelect('user.id')
+      .addSelect('user.name')
+      .getOne();
 
-    return {
-      ...challenge,
-      solves: challenge.solves.map((solve) => {
-        return {
-          id: solve.user.id,
-          name: solve.user.name,
-          createdAt: solve.createdAt,
-        };
-      }),
-    };
+    return challenge;
   }
 
   async upload(body: UploadDto): Promise<ChallengeResDto> {
@@ -116,12 +108,12 @@ export class ChallengeService {
     if (!challenge)
       throw new HttpException('Challenge not found', HttpStatus.BAD_REQUEST);
 
-    if (!challenge.show) {
-      throw new HttpException(
-        'This challenge is not available',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    // if (!challenge.show) {
+    //   throw new HttpException(
+    //     'This challenge is not available',
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
 
     const isSolved = await this.solveRepository.findBy({
       challenge: { id: body.id },

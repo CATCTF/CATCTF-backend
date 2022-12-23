@@ -29,25 +29,3 @@ export class ChallengeResDto {
   @IsString()
   category: string;
 }
-
-export class CHallengeOneResDto {
-  @ApiProperty()
-  @IsString()
-  id: string;
-
-  @ApiProperty()
-  @IsString()
-  name: string;
-
-  @ApiProperty()
-  @IsNumber()
-  point: number;
-
-  @ApiProperty()
-  @IsArray()
-  solves: {
-    id: string;
-    name: string;
-    createdAt: Date;
-  }[];
-}

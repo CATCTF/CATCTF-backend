@@ -11,12 +11,9 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AccessGuard, AdminGuard } from 'src/auth/guard/access.guard';
+import { Challenge } from './challenge.entity';
 import { ChallengeService } from './challenge.service';
-import {
-  CHallengeOneResDto,
-  ChallengeResDto,
-  ChallengesResDto,
-} from './dto/ChallengeResDto';
+import { ChallengeResDto, ChallengesResDto } from './dto/ChallengeResDto';
 import { DeleteDto } from './dto/DeleteDto';
 import { SolveDto, SolveResDto } from './dto/SolveDto';
 import { UpdateDto } from './dto/UpdateDto';
@@ -58,7 +55,7 @@ export class ChallengeController {
   @ApiBearerAuth()
   @ApiQuery({ name: 'id', required: true })
   @UseGuards(AccessGuard)
-  async getOne(@Query('id') id: string): Promise<CHallengeOneResDto> {
+  async getOne(@Query('id') id: string): Promise<Challenge> {
     return this.challengeService.getOne(id);
   }
 
