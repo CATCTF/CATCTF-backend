@@ -29,12 +29,6 @@ export class User {
   @Column('boolean', { default: false })
   isAdmin!: boolean;
 
-  @Column('integer', { default: 0 })
-  point!: number;
-
-  @Column('number')
-  rank!: number;
-
   @UpdateDateColumn()
   updatedAt!: Date;
 

@@ -18,3 +18,27 @@ export class ProfileDto {
   @IsString()
   school?: string;
 }
+
+export class ProfileResDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  school: string;
+
+  @ApiProperty()
+  point: number;
+
+  @ApiProperty()
+  solves: {
+    challenge: {
+      id: string;
+      name: string;
+      point: number;
+    };
+    createdAt: Date;
+  }[];
+}

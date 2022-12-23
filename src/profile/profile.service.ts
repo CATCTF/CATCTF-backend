@@ -1,9 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { sha256 } from 'src/auth/auth.service';
 import { MessageResDto } from 'src/dto/MessageResDto';
+import { getDynamicScore } from 'src/utils/getDynamicScore';
 import { Repository } from 'typeorm';
-import { ProfileDto } from './dto/ProfileDto';
+import { ProfileDto, ProfileResDto } from './dto/ProfileDto';
 import { User } from './user.entity';
 
 @Injectable()
@@ -11,13 +13,14 @@ export class ProfileService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly config: ConfigService,
   ) {}
 
-  async getProfile(id: string): Promise<User> {
+  async getProfile(id: string): Promise<ProfileResDto> {
     const profile = await this.userRepository
       .createQueryBuilder('user')
       .where('user.id = :id', { id })
-      .select(['user.id', 'user.name', 'user.point', 'user.school'])
+      .select(['user.id', 'user.name', 'user.school'])
       .leftJoin('user.solves', 'solve', 'solve.userId = user.id')
       .addSelect('solve.createdAt')
       .leftJoin(
@@ -30,7 +33,25 @@ export class ProfileService {
       .addSelect('challenge.point')
       .getOne();
 
-    return profile;
+    const maximumPoint = this.config.get<number>('maximumPoint');
+    const minimumPoint = this.config.get<number>('minimumPoint');
+    const decay = this.config.get<number>('decay');
+    const point = profile.solves.reduce((acc, cur) => {
+      return (
+        acc +
+        getDynamicScore({
+          minimumPoint,
+          maximumPoint,
+          decay,
+          point: cur.challenge.point,
+        })
+      );
+    }, 0);
+
+    return {
+      ...profile,
+      point,
+    };
   }
 
   async changeProfile(id: string, body: ProfileDto): Promise<MessageResDto> {

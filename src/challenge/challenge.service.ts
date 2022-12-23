@@ -21,7 +21,7 @@ export class ChallengeService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Solve)
     private readonly solveRepository: Repository<Solve>,
-    private readonly configService: ConfigService,
+    private readonly config: ConfigService,
   ) {}
 
   async getAll(req: User): Promise<ChallengesResDto> {
@@ -55,7 +55,7 @@ export class ChallengeService {
     const challenge = await this.challengeRepository.create({
       ...body,
       flag: sha256(body.flag),
-      point: 500,
+      point: this.config.get<number>('MAXIMUM_POINT'),
     });
     await this.challengeRepository.save(challenge);
     return {
@@ -101,95 +101,29 @@ export class ChallengeService {
   }
 
   async solve(body: SolveDto, user: User): Promise<SolveResDto> {
+    const isSolved = await this.solveRepository.findOneBy({
+      user: {
+        id: user.id,
+      },
+      challenge: {
+        id: body.id,
+      },
+    });
+    if (isSolved)
+      throw new HttpException('Already solved', HttpStatus.BAD_REQUEST);
+
     const challenge = await this.challengeRepository.findOneBy({
       id: body.id,
     });
+    const isCorrectFlag = sha256(body.flag) === challenge.flag;
+    challenge.solve += 1;
+    await this.challengeRepository.save(challenge);
 
-    if (!challenge)
-      throw new HttpException('Challenge not found', HttpStatus.BAD_REQUEST);
-
-    if (!challenge.show) {
-      throw new HttpException(
-        'This challenge is not available',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    const isSolved = await this.solveRepository.findBy({
+    const solve = this.solveRepository.create({
+      user: { id: user.id },
       challenge: { id: body.id },
     });
-
-    if (isSolved.find((solve) => solve.user.id === user.id))
-      throw new HttpException(
-        'You have already solved this challenge',
-        HttpStatus.BAD_REQUEST,
-      );
-
-    const isCorrectFlag = sha256(body.flag) === challenge.flag;
-
-    if (isCorrectFlag) {
-      const minimumPoint =
-        this.configService.get<number>('MINIMUM_POINT') | 100;
-      const maximumPoint =
-        this.configService.get<number>('MAXIMUM_POINT') | 500;
-      const decay = this.configService.get<number>('DECAY') | 15;
-
-      const solve = this.solveRepository.create({
-        user: { id: user.id },
-        challenge: { id: challenge.id },
-      });
-      await this.solveRepository.save(solve);
-
-      if (isSolved) {
-        isSolved.forEach((solve) => {
-          if (solve.user.id !== user.id) solve.user.point -= challenge.point;
-        });
-      }
-
-      // Dynamic Scoring
-      const point = Math.ceil(
-        ((minimumPoint - maximumPoint) / decay ** 2) * challenge.solve ** 2 +
-          maximumPoint,
-      );
-
-      challenge.point = point > 100 ? point : 100;
-
-      const userData = await this.userRepository.findOneBy({
-        id: user.id,
-      });
-      userData.point += challenge.point;
-      await this.userRepository.save(userData);
-
-      challenge.solve += 1;
-
-      if (isSolved) {
-        isSolved.forEach((solve) => {
-          solve.user.point += challenge.point;
-        });
-      }
-      // rank
-      const users = await this.userRepository.find({
-        select: ['id', 'point', 'rank'],
-        relations: ['solves'],
-      });
-
-      users.sort((a, b) => {
-        if (a.point === b.point)
-          return (
-            new Date(a.solves[0].createdAt).getTime() -
-            new Date(b.solves[0].createdAt).getTime()
-          );
-        else return b.point - a.point;
-      });
-
-      users.forEach((user, index) => {
-        user.rank = index + 1;
-      });
-
-      await this.userRepository.save(users);
-      await this.solveRepository.save(isSolved);
-      await this.challengeRepository.save(challenge);
-    }
+    await this.solveRepository.save(solve);
 
     return {
       message: isCorrectFlag ? 'Correct flag' : 'Incorrect flag',

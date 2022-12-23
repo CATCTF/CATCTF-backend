@@ -10,7 +10,7 @@ import {
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AccessGuard } from 'src/auth/guard/access.guard';
 import { MessageResDto } from 'src/dto/MessageResDto';
-import { ProfileDto } from './dto/ProfileDto';
+import { ProfileDto, ProfileResDto } from './dto/ProfileDto';
 import { ProfileService } from './profile.service';
 import { User } from './user.entity';
 
@@ -28,7 +28,7 @@ export class ProfileController {
   @Get(':id')
   @ApiQuery({ name: 'id', required: true })
   @ApiBearerAuth()
-  async getProfileById(@Query('id') id: string): Promise<User> {
+  async getProfileById(@Query('id') id: string): Promise<ProfileResDto> {
     return this.profileService.getProfile(id);
   }
 
