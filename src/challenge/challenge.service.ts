@@ -1,6 +1,13 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  StreamableFile,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
+import { createReadStream, rename } from 'fs';
+import { join } from 'path';
 import { sha256 } from 'src/auth/auth.service';
 import { User } from 'src/profile/user.entity';
 import { Repository } from 'typeorm';
@@ -9,7 +16,8 @@ import { ChallengeResDto, ChallengesResDto } from './dto/ChallengeResDto';
 import { DeleteDto } from './dto/DeleteDto';
 import { SolveDto, SolveResDto } from './dto/SolveDto';
 import { UpdateDto } from './dto/UpdateDto';
-import { UploadDto } from './dto/UploadDto';
+import { UploadDto, UploadFileDto, UploadFileResDto } from './dto/UploadDto';
+import { File } from './file.entity';
 import { Solve } from './solve.entity';
 
 @Injectable()
@@ -17,8 +25,8 @@ export class ChallengeService {
   constructor(
     @InjectRepository(Challenge)
     private readonly challengeRepository: Repository<Challenge>,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    @InjectRepository(File)
+    private readonly fileRepository: Repository<File>,
     @InjectRepository(Solve)
     private readonly solveRepository: Repository<Solve>,
     private readonly config: ConfigService,
@@ -26,12 +34,27 @@ export class ChallengeService {
 
   async getAll(req: User): Promise<ChallengesResDto> {
     let challenges: Challenge[];
-    if (req.isAdmin) challenges = await this.challengeRepository.find();
+    if (req.isAdmin)
+      challenges = await this.challengeRepository
+        .createQueryBuilder('challenge')
+        .select([
+          'challenge.id',
+          'challenge.name',
+          'challenge.description',
+          'challenge.connection',
+          'challenge.show',
+          'challenge.point',
+          'challenge.category',
+        ])
+        .leftJoin('challenge.file', 'file', 'file.challengeId = challenge.id')
+        .addSelect('file.id')
+        .getMany();
     else challenges = await this.challengeRepository.findBy({ show: true });
     return {
       userId: req.id,
       challenges,
       total: challenges.length,
+      categories: [...new Set(challenges.map((c) => c.category))],
     };
   }
 
@@ -42,10 +65,12 @@ export class ChallengeService {
       .where('challenge.id = :id', { id })
       .select(['challenge.id', 'challenge.name'])
       .leftJoin('challenge.solves', 'solve', 'solve.challengeId = challenge.id')
-      .addSelect('solve.createdAt')
+      .leftJoin('challenge.file', 'file', 'file.challengeId = challenge.id')
       .leftJoin('solve.user', 'user')
+      .addSelect('solve.createdAt')
       .addSelect('user.id')
       .addSelect('user.name')
+      .addSelect('file.id')
       .getOne();
 
     return challenge;
@@ -62,6 +87,20 @@ export class ChallengeService {
       id: challenge.id,
       name: challenge.name,
       category: challenge.category,
+    };
+  }
+
+  async downloadFile(id: string) {
+    const file = await this.fileRepository.findOneBy({
+      id,
+    });
+
+    if (!file)
+      throw new HttpException('File not found', HttpStatus.BAD_REQUEST);
+
+    return {
+      file: new StreamableFile(createReadStream(join(file.path))),
+      type: file.mimetype,
     };
   }
 
@@ -89,6 +128,7 @@ export class ChallengeService {
     if (!challenge)
       throw new HttpException('Challenge not found', HttpStatus.BAD_REQUEST);
 
+    if (body.flag) body.flag = sha256(body.flag);
     Object.assign(challenge, body);
 
     await this.challengeRepository.save(challenge);
@@ -115,6 +155,12 @@ export class ChallengeService {
     const challenge = await this.challengeRepository.findOneBy({
       id: body.id,
     });
+    if (!challenge)
+      throw new HttpException('Challenge not found', HttpStatus.BAD_REQUEST);
+    else if (!challenge.show)
+      throw new HttpException('Challenge not found', HttpStatus.BAD_REQUEST);
+    else if (user.isAdmin)
+      throw new HttpException('Admin cannot solve', HttpStatus.BAD_REQUEST);
     const isCorrectFlag = sha256(body.flag) === challenge.flag;
     challenge.solve += 1;
     await this.challengeRepository.save(challenge);
@@ -128,6 +174,61 @@ export class ChallengeService {
     return {
       message: isCorrectFlag ? 'Correct flag' : 'Incorrect flag',
       correct: isCorrectFlag,
+    };
+  }
+
+  async uploadFile(
+    body: UploadFileDto,
+    challengeFile: Express.Multer.File,
+  ): Promise<UploadFileResDto> {
+    const challenge = await this.challengeRepository.findOneBy({
+      id: body.id,
+    });
+
+    const originalFile = await this.fileRepository.findOneBy({
+      challenge: {
+        id: body.id,
+      },
+    });
+    if (originalFile) {
+      challenge.file = null;
+      this.challengeRepository.save(challenge);
+      await this.fileRepository.delete(originalFile);
+      await this.fileRepository.save(originalFile);
+    }
+
+    const file = this.fileRepository.create({
+      challenge: { id: body.id },
+      name: challengeFile.originalname,
+      path:
+        challengeFile.path +
+        '.' +
+        challengeFile.originalname.split('.').reverse()[0],
+      mimetype: challengeFile.mimetype,
+    });
+    await this.fileRepository.save(file);
+
+    rename(
+      challengeFile.path,
+      challengeFile.path +
+        '.' +
+        challengeFile.originalname.split('.').reverse()[0],
+      (err) => {
+        if (err) throw err;
+      },
+    );
+
+    challenge.file = file;
+    await this.challengeRepository.save(challenge);
+
+    console.log(file);
+
+    if (!challenge)
+      throw new HttpException('Challenge not found', HttpStatus.BAD_REQUEST);
+
+    return {
+      file: challengeFile.originalname,
+      challenge: challenge.name,
     };
   }
 }

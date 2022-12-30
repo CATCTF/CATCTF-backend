@@ -30,3 +30,23 @@ export class UploadDto {
   @IsString()
   hint?: string;
 }
+
+export class UploadFileDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  id!: string;
+
+  @ApiProperty()
+  file: Express.Multer.File;
+}
+
+export class UploadFileResDto {
+  @ApiProperty()
+  @IsString()
+  file: string;
+
+  @ApiProperty()
+  @IsString()
+  challenge: string;
+}

@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from './profile/user.entity';
 import { Challenge } from './challenge/challenge.entity';
 import { Solve } from './challenge/solve.entity';
+import { File } from './challenge/file.entity';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { Solve } from './challenge/solve.entity';
         username: config.get<string>('DB_USERNAME'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_DATABASE'),
-        entities: [User, Challenge, Solve],
+        entities: [User, Challenge, Solve, File],
         synchronize: true,
         charset: 'utf8_general_ci',
       }),

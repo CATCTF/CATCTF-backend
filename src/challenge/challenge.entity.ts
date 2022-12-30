@@ -3,9 +3,11 @@ import {
   Entity,
   JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { File } from './file.entity';
 import { Solve } from './solve.entity';
 
 @Entity()
@@ -46,4 +48,8 @@ export class Challenge {
   @OneToMany(() => Solve, (solve) => solve.challenge)
   @JoinColumn()
   solves: Solve[];
+
+  @OneToOne(() => File, (file) => file.challenge, { eager: true })
+  @JoinColumn()
+  file: File;
 }
