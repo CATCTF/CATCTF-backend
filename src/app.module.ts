@@ -5,6 +5,7 @@ import { DataBaseModule } from './database.module';
 import { ProfileModule } from './profile/profile.module';
 import { ChallengeModule } from './challenge/challenge.module';
 import { ScoreModule } from './score/score.module';
+import { NoticeModule } from './notice/notice.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ScoreModule } from './score/score.module';
     DataBaseModule,
     ChallengeModule,
     ScoreModule,
+    NoticeModule,
   ],
   controllers: [],
   providers: [],
