@@ -10,8 +10,8 @@ export class ScoreController {
 
   @Get()
   @ApiBearerAuth()
-  // @UseGuards(AccessGuard)
-  async getScore() /* : Promise<User[]> */ {
+  @UseGuards(AccessGuard)
+  async getScore(): Promise<User[]> {
     return await this.scoreService.getScoreAll();
   }
 }

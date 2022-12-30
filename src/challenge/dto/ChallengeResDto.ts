@@ -14,6 +14,10 @@ export class ChallengesResDto {
   @ApiProperty()
   @IsNumber()
   total: number;
+
+  @ApiProperty()
+  @IsArray()
+  categories: string[];
 }
 
 export class ChallengeResDto {

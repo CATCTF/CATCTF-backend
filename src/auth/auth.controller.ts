@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { AccessGuard } from 'src/auth/guard/access.guard';
@@ -13,19 +21,23 @@ export class AuthController {
   @Get('/')
   @ApiBearerAuth()
   @UseGuards(AccessGuard)
-  async getHello(): Promise<string> {
-    return await this.authService.getHello();
+  async getHello(@Req() req: any) {
+    return this.authService.getHello(req.user.isAdmin);
   }
 
   @Post('/register')
   @ApiBody({ type: RegisterDto })
   async register(@Body() body: RegisterDto): Promise<AuthResDto> {
-    return await this.authService.register(body);
+    const { id } = await this.authService.register(body);
+    const { accessToken } = await this.authService.generateAccessToken(id);
+    return { accessToken };
   }
 
   @Post('/login')
   @ApiBody({ type: LoginDto })
   async login(@Body() body: LoginDto): Promise<AuthResDto> {
-    return await this.authService.login(body);
+    const { id } = await this.authService.login(body);
+    const { accessToken } = await this.authService.generateAccessToken(id);
+    return { accessToken };
   }
 }

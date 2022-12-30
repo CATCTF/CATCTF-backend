@@ -22,11 +22,22 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async getHello(): Promise<string> {
-    return 'Hello World!';
+  async generateAccessToken(id: string): Promise<AuthResDto> {
+    const accessToken = await this.jwtService.signAsync(
+      { id },
+      {
+        secret: this.configService.get('JWT_SECRET'),
+        expiresIn: this.configService.get('JWT_EXPIRES_IN') ?? '1d',
+      },
+    );
+    return { accessToken };
   }
 
-  async register(body: RegisterDto): Promise<AuthResDto> {
+  async getHello(isAdmin: boolean): Promise<{ isAdmin: boolean }> {
+    return { isAdmin };
+  }
+
+  async register(body: RegisterDto): Promise<{ id: string }> {
     const user = await this.userRepository.findOne({
       where: { id: body.id },
     });
@@ -39,18 +50,10 @@ export class AuthService {
     });
     await this.userRepository.save(newUser);
 
-    const accessToken = await this.jwtService.signAsync(
-      { id: newUser.id },
-      {
-        secret: this.configService.get('JWT_SECRET'),
-        expiresIn: this.configService.get('JWT_EXPIRES_IN') ?? '1d',
-      },
-    );
-
-    return { accessToken };
+    return { id: newUser.id };
   }
 
-  async login(body: LoginDto): Promise<AuthResDto> {
+  async login(body: LoginDto): Promise<{ id: string }> {
     const { id, password } = body;
     const user = await this.userRepository.findOneBy({
       id,
@@ -59,14 +62,6 @@ export class AuthService {
 
     if (!user) throw new HttpException('Forbbiden', HttpStatus.UNAUTHORIZED);
 
-    const accessToken = await this.jwtService.signAsync(
-      { id },
-      {
-        secret: this.configService.get('JWT_SECRET'),
-        expiresIn: this.configService.get('JWT_EXPIRES_IN') ?? '1d',
-      },
-    );
-
-    return { accessToken };
+    return { id };
   }
 }

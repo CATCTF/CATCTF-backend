@@ -23,7 +23,10 @@ async function bootstrap() {
 
   app.use(cookieParser());
   app.enableCors({
-    origin: config.get<string>('CORS_ORIGIN', '*'),
+    origin: config.get<string>(
+      'CORS_ORIGIN',
+      config.get<string>('CORS_ORIGIN'),
+    ),
     methods: config.get<string>('CORS_METHODS', 'GET,PUT,POST,DELETE'),
     credentials: config.get<boolean>('CORS_CREDENTIALS', true),
     preflightContinue: config.get<boolean>('CORS_PREFLIGHT', false),
