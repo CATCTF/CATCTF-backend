@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Solve } from 'src/challenge/solve.entity';
 import { User } from 'src/profile/user.entity';
 import { Repository } from 'typeorm';
 
@@ -24,10 +22,12 @@ export class ScoreService {
       .createQueryBuilder('user')
       .leftJoin('user.solves', 'solve', 'solve.userId = user.id')
       .leftJoin('solve.challenge', 'challenge')
+      .where('user.isAdmin = false')
       .select('user.id', 'id')
       .addSelect('user.name', 'name')
       .addSelect('MIN(solve.createdAt)', 'lastSolvedAt')
       .addSelect('SUM(challenge.point)', 'point')
+      .addSelect('COUNT(solve.id)', 'solved')
       .orderBy('point', 'DESC')
       .addOrderBy('lastSolvedAt', 'ASC')
       .groupBy('user.id')

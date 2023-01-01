@@ -31,21 +31,14 @@ export class ProfileService {
       .addSelect('challenge.id')
       .addSelect('challenge.name')
       .addSelect('challenge.point')
+      .leftJoinAndSelect(
+        'challenge.solves',
+        'solves',
+        'solves.challengeId = challenge.id',
+      )
       .getOne();
-
-    const maximumPoint = this.config.get<number>('maximumPoint');
-    const minimumPoint = this.config.get<number>('minimumPoint');
-    const decay = this.config.get<number>('decay');
     const point = profile.solves.reduce((acc, cur) => {
-      return (
-        acc +
-        getDynamicScore({
-          minimumPoint,
-          maximumPoint,
-          decay,
-          point: cur.challenge.point,
-        })
-      );
+      return acc + cur.challenge.point;
     }, 0);
 
     return {
