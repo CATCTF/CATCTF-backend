@@ -48,6 +48,7 @@ async function bootstrap() {
         rank: 0,
         isAdmin: true,
       });
+      Logger.log('Admin user created.');
     }
     await app.listen(3000);
     Logger.log('Server is running on port 3000');
