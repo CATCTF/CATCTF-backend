@@ -20,7 +20,7 @@ export class ProfileService {
     const profile = await this.userRepository
       .createQueryBuilder('user')
       .where('user.id = :id', { id })
-      .select(['user.id', 'user.name', 'user.school'])
+      .select(['user.id', 'user.name', 'user.school', 'user.isAdmin'])
       .leftJoin('user.solves', 'solve', 'solve.userId = user.id')
       .addSelect('solve.createdAt')
       .leftJoin(
