@@ -6,6 +6,7 @@ import { ProfileModule } from './profile/profile.module';
 import { ChallengeModule } from './challenge/challenge.module';
 import { ScoreModule } from './score/score.module';
 import { NoticeModule } from './notice/notice.module';
+import { AdminAppModule } from './admin-app.module';
 
 @Module({
   imports: [
@@ -13,9 +14,10 @@ import { NoticeModule } from './notice/notice.module';
       isGlobal: true,
       envFilePath: [`.env`],
     }),
+    DataBaseModule,
+    AdminAppModule,
     AuthModule,
     ProfileModule,
-    DataBaseModule,
     ChallengeModule,
     ScoreModule,
     NoticeModule,

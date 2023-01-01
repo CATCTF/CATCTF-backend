@@ -133,7 +133,7 @@ export class ChallengeService {
     if (!challenge)
       throw new HttpException('Challenge not found', HttpStatus.BAD_REQUEST);
 
-    await this.challengeRepository.delete(challenge);
+    await this.challengeRepository.delete({ id: challenge.id });
     await this.challengeRepository.save(challenge);
 
     return {
@@ -223,7 +223,7 @@ export class ChallengeService {
     if (originalFile) {
       challenge.file = null;
       await this.challengeRepository.save(challenge);
-      await this.fileRepository.delete(originalFile);
+      await this.fileRepository.delete({ id: originalFile.id });
       await this.fileRepository.save(originalFile);
     }
 
