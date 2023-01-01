@@ -10,6 +10,7 @@ import { createReadStream, rename } from 'fs';
 import { join } from 'path';
 import { sha256 } from 'src/auth/auth.service';
 import { User } from 'src/profile/user.entity';
+import { getDynamicScore } from 'src/utils/getDynamicScore';
 import { Repository } from 'typeorm';
 import { Challenge } from './challenge.entity';
 import { ChallengeResDto, ChallengesResDto } from './dto/ChallengeResDto';
@@ -48,13 +49,37 @@ export class ChallengeService {
         ])
         .leftJoin('challenge.file', 'file', 'file.challengeId = challenge.id')
         .addSelect('file.id')
+        .addSelect('file.mimetype')
         .getMany();
-    else challenges = await this.challengeRepository.findBy({ show: true });
+    else
+      challenges = await this.challengeRepository
+        .createQueryBuilder('challenge')
+        .where('challenge.show = true')
+        .select([
+          'challenge.id',
+          'challenge.name',
+          'challenge.description',
+          'challenge.connection',
+          'challenge.show',
+          'challenge.point',
+          'challenge.category',
+        ])
+        .leftJoin('challenge.file', 'file', 'file.challengeId = challenge.id')
+        .addSelect('file.id')
+        .addSelect('file.mimetype')
+        .getMany();
+
+    const solves = await this.solveRepository
+      .createQueryBuilder('solve')
+      .where('solve.userId = :userId', { userId: req.id })
+      .leftJoinAndSelect('solve.challenge', 'challenge')
+      .getMany();
+
     return {
-      userId: req.id,
       challenges,
       total: challenges.length,
       categories: [...new Set(challenges.map((c) => c.category))],
+      solves: solves.map((s) => s.challenge.id),
     };
   }
 
@@ -97,11 +122,7 @@ export class ChallengeService {
 
     if (!file)
       throw new HttpException('File not found', HttpStatus.BAD_REQUEST);
-
-    return {
-      file: new StreamableFile(createReadStream(join(file.path))),
-      type: file.mimetype,
-    };
+    return file.path;
   }
 
   async delete(body: DeleteDto): Promise<DeleteDto> {
@@ -163,6 +184,15 @@ export class ChallengeService {
       throw new HttpException('Admin cannot solve', HttpStatus.BAD_REQUEST);
     const isCorrectFlag = sha256(body.flag) === challenge.flag;
     challenge.solve += 1;
+    const maximumPoint = this.config.get<number>('MAXIMUM_POINT');
+    const minimumPoint = this.config.get<number>('MINIMUM_POINT');
+    const decay = this.config.get<number>('DECAY');
+    getDynamicScore({
+      solve_count: challenge.solve,
+      maximumPoint,
+      minimumPoint,
+      decay,
+    });
     await this.challengeRepository.save(challenge);
 
     const solve = this.solveRepository.create({
@@ -192,7 +222,7 @@ export class ChallengeService {
     });
     if (originalFile) {
       challenge.file = null;
-      this.challengeRepository.save(challenge);
+      await this.challengeRepository.save(challenge);
       await this.fileRepository.delete(originalFile);
       await this.fileRepository.save(originalFile);
     }
@@ -220,8 +250,6 @@ export class ChallengeService {
 
     challenge.file = file;
     await this.challengeRepository.save(challenge);
-
-    console.log(file);
 
     if (!challenge)
       throw new HttpException('Challenge not found', HttpStatus.BAD_REQUEST);

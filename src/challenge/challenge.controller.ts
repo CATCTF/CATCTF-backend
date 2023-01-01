@@ -4,11 +4,13 @@ import {
   Delete,
   Get,
   MaxFileSizeValidator,
+  Param,
   ParseFilePipe,
   Post,
   Put,
   Query,
   Req,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -23,6 +25,7 @@ import { DeleteDto } from './dto/DeleteDto';
 import { SolveDto, SolveResDto } from './dto/SolveDto';
 import { UpdateDto } from './dto/UpdateDto';
 import { UploadDto, UploadFileDto, UploadFileResDto } from './dto/UploadDto';
+import { Response } from 'express';
 
 @Controller('challenge')
 export class ChallengeController {
@@ -56,7 +59,6 @@ export class ChallengeController {
         },
         file: {
           type: 'string',
-          format: 'binary',
         },
       },
     },
@@ -78,8 +80,8 @@ export class ChallengeController {
   @Get('/file/:id')
   @ApiBearerAuth()
   @UseGuards(AccessGuard)
-  async downloadFile(@Query('id') id: string) {
-    return this.challengeService.downloadFile(id);
+  async downloadFile(@Param('id') id: string, @Res() res: Response) {
+    return res.download(await this.challengeService.downloadFile(id));
   }
 
   @Delete()

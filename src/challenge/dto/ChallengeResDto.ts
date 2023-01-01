@@ -4,10 +4,6 @@ import { Challenge } from '../challenge.entity';
 
 export class ChallengesResDto {
   @ApiProperty()
-  @IsString()
-  userId: string;
-
-  @ApiProperty()
   @IsArray()
   challenges: Challenge[];
 
@@ -18,6 +14,10 @@ export class ChallengesResDto {
   @ApiProperty()
   @IsArray()
   categories: string[];
+
+  @ApiProperty()
+  @IsArray()
+  solves: string[];
 }
 
 export class ChallengeResDto {
