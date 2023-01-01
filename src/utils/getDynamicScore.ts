@@ -2,16 +2,17 @@ interface GetDynamicScore {
   minimumPoint: number;
   maximumPoint: number;
   decay: number;
-  point: number;
+  solve_count: number;
 }
 
 export function getDynamicScore({
   minimumPoint,
   maximumPoint,
   decay,
-  point,
+  solve_count,
 }: GetDynamicScore): number {
   return Math.ceil(
-    ((minimumPoint - maximumPoint) / decay ** 2) * point ** 2 + maximumPoint,
+    ((minimumPoint - Number(maximumPoint)) / decay ** 2) * solve_count ** 2 +
+      Number(maximumPoint),
   );
 }
