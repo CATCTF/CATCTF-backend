@@ -21,6 +21,9 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@adminjs/express": "^5.0.1",
+    "@adminjs/nestjs": "^5.0.1",
+    "@adminjs/typeorm": "^4.0.0",
     "@nestjs/common": "^9.0.0",
     "@nestjs/config": "^2.2.0",
     "@nestjs/core": "^9.0.0",
@@ -30,9 +33,12 @@
     "@nestjs/swagger": "^6.1.4",
     "@nestjs/typeorm": "^9.0.1",
     "@types/cookie-parser": "^1.4.3",
+    "adminjs": "^6.7.2",
     "class-validator": "^0.14.0",
     "cookie-parser": "^1.4.6",
     "crypto": "^1.0.1",
+    "express-formidable": "^1.2.0",
+    "express-session": "^1.17.3",
     "mime-types": "^2.1.35",
     "mysql2": "^2.3.3",
     "passport": "^0.6.0",

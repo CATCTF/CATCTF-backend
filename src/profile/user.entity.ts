@@ -1,6 +1,6 @@
-
 import { Solve } from 'src/challenge/solve.entity';
 import {
+  BaseEntity,
   Column,
   Entity,
   JoinColumn,
@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class User {
+export class User extends BaseEntity {
   @PrimaryColumn('varchar', { length: 36 })
   id!: string;
 

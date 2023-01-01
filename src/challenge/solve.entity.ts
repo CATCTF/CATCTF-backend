@@ -1,5 +1,6 @@
 import { User } from 'src/profile/user.entity';
 import {
+  BaseEntity,
   CreateDateColumn,
   Entity,
   JoinColumn,
@@ -9,7 +10,7 @@ import {
 import { Challenge } from './challenge.entity';
 
 @Entity()
-export class Solve {
+export class Solve extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 

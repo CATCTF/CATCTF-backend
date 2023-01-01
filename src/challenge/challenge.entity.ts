@@ -1,4 +1,5 @@
 import {
+  BaseEntity,
   Column,
   Entity,
   JoinColumn,
@@ -11,7 +12,7 @@ import { File } from './file.entity';
 import { Solve } from './solve.entity';
 
 @Entity()
-export class Challenge {
+export class Challenge extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

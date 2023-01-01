@@ -5,6 +5,7 @@ import { User } from './profile/user.entity';
 import { Challenge } from './challenge/challenge.entity';
 import { Solve } from './challenge/solve.entity';
 import { File } from './challenge/file.entity';
+import { Notice } from './notice/notice.entity';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { File } from './challenge/file.entity';
         username: config.get<string>('DB_USERNAME'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_DATABASE'),
-        entities: [User, Challenge, Solve, File],
+        entities: [User, Challenge, Solve, File, Notice],
         synchronize: true,
         charset: 'utf8_general_ci',
       }),
