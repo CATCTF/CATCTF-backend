@@ -23,6 +23,7 @@ export class ProfileService {
       .select(['user.id', 'user.name', 'user.school', 'user.isAdmin'])
       .leftJoin('user.solves', 'solve', 'solve.userId = user.id')
       .addSelect('solve.createdAt')
+      .addSelect('solve.id')
       .leftJoin(
         'solve.challenge',
         'challenge',
