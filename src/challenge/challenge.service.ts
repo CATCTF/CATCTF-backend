@@ -1,15 +1,10 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  StreamableFile,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { createReadStream, rename } from 'fs';
-import { join } from 'path';
+import { rename } from 'fs';
 import { sha256 } from 'src/auth/auth.service';
 import { User } from 'src/profile/user.entity';
+import { getContestStatus } from 'src/utils/getContestStatus';
 import { getDynamicScore } from 'src/utils/getDynamicScore';
 import { Repository } from 'typeorm';
 import { Challenge } from './challenge.entity';
@@ -162,6 +157,16 @@ export class ChallengeService {
   }
 
   async solve(body: SolveDto, user: User): Promise<SolveResDto> {
+    const startTimestamp = this.config.get<number>('START_TIME');
+    const finishTimestamp = this.config.get<number>('FINISH_TIME');
+    if (
+      getContestStatus(startTimestamp, finishTimestamp) === 2 ||
+      getContestStatus(startTimestamp, finishTimestamp) === 0
+    )
+      return {
+        message: 'Contest is not finished',
+        correct: false,
+      };
     const isSolved = await this.solveRepository.findOneBy({
       user: {
         id: user.id,
