@@ -2,17 +2,16 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Put,
-  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { AccessGuard } from 'src/auth/guard/access.guard';
 import { MessageResDto } from 'src/dto/MessageResDto';
 import { ProfileDto, ProfileResDto } from './dto/ProfileDto';
 import { ProfileService } from './profile.service';
-import { User } from './user.entity';
 
 @Controller('profile')
 export class ProfileController {
@@ -22,14 +21,14 @@ export class ProfileController {
   @ApiBearerAuth()
   @UseGuards(AccessGuard)
   async getProfile(@Req() req: any): Promise<any> {
-    return this.profileService.getProfile(req.user.id);
+    return await this.profileService.getProfile(req.user.id);
   }
 
   @Get(':id')
-  @ApiQuery({ name: 'id', required: true })
+  @ApiParam({ name: 'id', required: true })
   @ApiBearerAuth()
-  async getProfileById(@Query('id') id: string): Promise<ProfileResDto> {
-    return this.profileService.getProfile(id);
+  async getProfileById(@Param('id') id: string): Promise<ProfileResDto> {
+    return await this.profileService.getProfile(id);
   }
 
   @Put()
