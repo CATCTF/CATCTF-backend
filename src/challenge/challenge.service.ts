@@ -187,7 +187,7 @@ export class ChallengeService {
     const maximumPoint = this.config.get<number>('MAXIMUM_POINT');
     const minimumPoint = this.config.get<number>('MINIMUM_POINT');
     const decay = this.config.get<number>('DECAY');
-    getDynamicScore({
+    challenge.point = getDynamicScore({
       solve_count: challenge.solve,
       maximumPoint,
       minimumPoint,
