@@ -11,8 +11,10 @@ export function getDynamicScore({
   decay,
   solve_count,
 }: GetDynamicScore): number {
-  return Math.ceil(
+  const score = Math.ceil(
     ((minimumPoint - Number(maximumPoint)) / decay ** 2) * solve_count ** 2 +
       Number(maximumPoint),
   );
+  if (score < minimumPoint) return minimumPoint;
+  else return score;
 }
