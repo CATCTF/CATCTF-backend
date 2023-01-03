@@ -190,23 +190,25 @@ export class ChallengeService {
     else if (user.isAdmin)
       throw new HttpException('Admin cannot solve', HttpStatus.BAD_REQUEST);
     const isCorrectFlag = sha256(body.flag) === challenge.flag;
-    challenge.solve += 1;
-    const maximumPoint = this.config.get<number>('MAXIMUM_POINT');
-    const minimumPoint = this.config.get<number>('MINIMUM_POINT');
-    const decay = this.config.get<number>('DECAY');
-    challenge.point = getDynamicScore({
-      solve_count: challenge.solve,
-      maximumPoint,
-      minimumPoint,
-      decay,
-    });
-    await this.challengeRepository.save(challenge);
+    if (isCorrectFlag) {
+      challenge.solve += 1;
+      const maximumPoint = this.config.get<number>('MAXIMUM_POINT');
+      const minimumPoint = this.config.get<number>('MINIMUM_POINT');
+      const decay = this.config.get<number>('DECAY');
+      challenge.point = getDynamicScore({
+        solve_count: challenge.solve,
+        maximumPoint,
+        minimumPoint,
+        decay,
+      });
+      await this.challengeRepository.save(challenge);
 
-    const solve = this.solveRepository.create({
-      user: { id: user.id },
-      challenge: { id: body.id },
-    });
-    await this.solveRepository.save(solve);
+      const solve = this.solveRepository.create({
+        user: { id: user.id },
+        challenge: { id: body.id },
+      });
+      await this.solveRepository.save(solve);
+    }
 
     return {
       message: isCorrectFlag ? 'Correct flag' : 'Incorrect flag',
