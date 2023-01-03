@@ -44,6 +44,7 @@ export class ChallengeService {
         ])
         .leftJoin('challenge.file', 'file', 'file.challengeId = challenge.id')
         .addSelect('file.id')
+        .addSelect('file.name')
         .addSelect('file.mimetype')
         .getMany();
     else
@@ -61,6 +62,7 @@ export class ChallengeService {
         ])
         .leftJoin('challenge.file', 'file', 'file.challengeId = challenge.id')
         .addSelect('file.id')
+        .addSelect('file.name')
         .addSelect('file.mimetype')
         .getMany();
 
