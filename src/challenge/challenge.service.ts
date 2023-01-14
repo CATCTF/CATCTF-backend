@@ -40,6 +40,7 @@ export class ChallengeService {
           'challenge.connection',
           'challenge.show',
           'challenge.point',
+          'challenge.solve',
           'challenge.category',
         ])
         .leftJoin('challenge.file', 'file', 'file.challengeId = challenge.id')
@@ -58,6 +59,7 @@ export class ChallengeService {
           'challenge.connection',
           'challenge.show',
           'challenge.point',
+          'challenge.solve',
           'challenge.category',
         ])
         .leftJoin('challenge.file', 'file', 'file.challengeId = challenge.id')
